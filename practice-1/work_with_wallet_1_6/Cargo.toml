@@ -1,0 +1,11 @@
+[package]
+name = "work_with_wallet_1_6"
+version = "0.1.0"
+edition = "2024"
+default-run = "work_with_wallet_1_6"
+
+[dependencies]
+solana-client = "2.2.6"
+solana-sdk = "2.2.2"
+
+

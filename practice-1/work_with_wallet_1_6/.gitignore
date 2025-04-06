@@ -1,0 +1,4 @@
+/config/pk.json
+debug/
+target/
+**/*.rs.bk
