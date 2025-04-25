@@ -1,0 +1,13 @@
+[package]
+name = "scripts_2_1_2_6"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mpl-token-metadata = "5.1.0"
+serde = "1.0.219"
+solana-client = "2.2.7"
+solana-sdk = "2.2.2"
+spl-associated-token-account = "6.0.0"
+spl-token = "8.0.0"
+toml = "0.8.20"
