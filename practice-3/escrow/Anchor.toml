@@ -1,0 +1,24 @@
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+escrow = "FXAxfUgPgK5WZMcKkCqBC28twcvg57LowieqtSnJD2BE"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run jest --preset ts-jest"
+
+[dev-dependencies]
+solana-sdk = ">=1.16"
+anchor-lang = ">=0.29"
+anchor-spl = ">=0.29"
+tokio = { version = "1", features = ["full"] }
