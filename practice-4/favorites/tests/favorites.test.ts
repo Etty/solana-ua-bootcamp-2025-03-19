@@ -134,6 +134,7 @@ describe("favorites", () => {
         [Buffer.from("favorites"), user.publicKey.toBuffer()],
         program.programId
       );
+
     // And make sure it matches!
     const dataFromPda = await program.account.favorites.fetch(favoritesPda);
     expect(dataFromPda.color).toEqual(newFavoriteColor);
@@ -186,5 +187,102 @@ describe("favorites", () => {
     const dataFromPda = await program.account.favorites.fetch(favoritesPda);
     expect(dataFromPda.color).toEqual(newFavoriteColor);
     expect(dataFromPda.number.toNumber()).toEqual(favoriteNumber.toNumber());
+  });
+  it("Testing favorites update when authority was set and unset", async () => {
+    const user = await createUser();
+    // Here's what we want to write to the blockchain
+    const favoriteNumber = new anchor.BN(23);
+    const favoriteColor = "red";
+
+    // Make a transaction to write to the blockchain
+    await createFavoritesTx(user, favoriteNumber, favoriteColor);
+    const authority = await createUser();
+
+    let txU: string | null = null;
+    try {
+      txU = await program.methods
+        .setAuthority(authority.publicKey)
+        .accounts({
+          user: user.publicKey,
+          id: authority.publicKey,
+        })
+        .signers([user, authority])
+        .rpc();
+    } catch (thrownObject) {
+      const rawError = thrownObject as Error;
+      throw new Error(
+        getCustomErrorMessage(systemProgramErrors, rawError.message)
+      );
+    }
+
+    const newFavoriteColor = "green";
+
+    // Make update
+    await updateFavoritesTx(user, null, newFavoriteColor);
+    // Check if update by owner works after authority adding
+    const [favoritesPda, _favoritesBump] =
+      web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("favorites"), user.publicKey.toBuffer()],
+        program.programId
+      );
+    // And make sure it matches!
+    const dataFromPda = await program.account.favorites.fetch(favoritesPda);
+    expect(dataFromPda.color).toEqual(newFavoriteColor);
+    expect(dataFromPda.number.toNumber()).toEqual(favoriteNumber.toNumber());
+
+    const favoriteNumberA = new anchor.BN(15);
+    const favoriteColorA = "yellow";
+    try {
+      txU = await program.methods
+        .updateFavoritesByAuthority(favoriteNumberA, favoriteColorA)
+        .accounts({
+          authority: authority.publicKey,
+        })
+        .signers([authority])
+        .rpc();
+    } catch (thrownObject) {
+      console.log(thrownObject);
+      const rawError = thrownObject as Error;
+      throw new Error(
+        getCustomErrorMessage(systemProgramErrors, rawError.message)
+      );
+    }
+    // Check if update by authority works
+    const dataFromPdaA = await program.account.favorites.fetch(favoritesPda);
+    expect(dataFromPdaA.color).toEqual(favoriteColorA);
+    expect(dataFromPdaA.number.toNumber()).toEqual(favoriteNumberA.toNumber());
+
+    // Unset authority
+    try {
+      txU = await program.methods
+        .setAuthority(null)
+        .accounts({
+          user: user.publicKey,
+        })
+        .signers([user])
+        .rpc();
+    } catch (thrownObject) {
+      console.log(thrownObject);
+      const rawError = thrownObject as Error;
+      throw new Error(
+        getCustomErrorMessage(systemProgramErrors, rawError.message)
+      );
+    }
+
+    // check that unset authority doesn't have any more permission to update favorites, so values are preserved
+    try {
+      txU = await program.methods
+        .updateFavoritesByAuthority(new anchor.BN(20), "orange")
+        .accounts({
+          authority: authority.publicKey,
+        })
+        .signers([authority])
+        .rpc();
+    } catch (thrownObject) {
+      expect(dataFromPdaA.color).toEqual(favoriteColorA);
+      expect(dataFromPdaA.number.toNumber()).toEqual(
+        favoriteNumberA.toNumber()
+      );
+    }
   });
 });
