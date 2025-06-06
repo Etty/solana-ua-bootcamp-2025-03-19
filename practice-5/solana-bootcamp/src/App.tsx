@@ -26,6 +26,7 @@ import { Toaster } from "sonner";
 import { createPass, query } from "./utils";
 
 import TakeOfferDialog from "@/components/dialogs/take-offer-dialog";
+import AccountTokens from "./pages/account-tokens";
 
 const App: React.FC = () => {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
@@ -49,6 +50,7 @@ const App: React.FC = () => {
     orders: 1,
     openOffers: 1,
     accountOffers: 1,
+    accountTokens: 1,
   });
 
   const { connect, connected, publicKey, disconnect, select, wallets } =
@@ -136,10 +138,11 @@ const App: React.FC = () => {
           Password: {createPass(walletAddress)}
         </h2>
         <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="orders">All Offers</TabsTrigger>
             <TabsTrigger value="openOffers">Open Offers</TabsTrigger>
             <TabsTrigger value="accountOffers">Account Offers</TabsTrigger>
+            <TabsTrigger value="accountTokens">Account Tokens</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders">
@@ -167,6 +170,17 @@ const App: React.FC = () => {
               isWalletConnected={isWalletConnected}
               disconnect={disconnect}
               setIsWalletConnected={setIsWalletConnected}
+              loading={loading}
+            />
+          </TabsContent>
+
+          <TabsContent value="accountTokens">
+            <AccountTokens
+              isWalletConnected={isWalletConnected}
+              disconnect={disconnect}
+              setIsWalletConnected={setIsWalletConnected}
+              currentPage={currentPage.accountTokens}
+              onPageChange={(page) => handlePageChange("accountTokens", page)}
               loading={loading}
             />
           </TabsContent>

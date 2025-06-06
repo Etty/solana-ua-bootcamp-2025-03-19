@@ -94,7 +94,6 @@ async function fetchTokenMetadata(
           const token = await metaplex
             .nfts()
             .findByMint({ mintAddress: new PublicKey(mintAddress) });
-
           metadata.name = token.name;
           metadata.symbol = token.symbol;
           metadata.icon = token.json?.image;
@@ -108,14 +107,13 @@ async function fetchTokenMetadata(
           }, new Map());
 
           const token = tokenMap.get(mintAddress);
-
           metadata.name = token.name;
           metadata.symbol = token.symbol;
-          metadata.icon = token.json?.image;
+          metadata.icon = token.logoURI;
         }
       }
 
-      if (!metadata.decimals) {
+      if (!metadata.symbol) {
         throw new Error("No metadata found");
       }
 

@@ -1,4 +1,4 @@
-import { useMultipleMetadata, formatTokenAmount } from '@/hooks/useMetadata';
+import { useMultipleMetadata, formatTokenAmount } from "@/hooks/useMetadata";
 
 interface TokenBalance {
   mint: string;
@@ -11,7 +11,7 @@ interface TokenListProps {
 
 export function TokenList({ tokens }: TokenListProps) {
   const { data: tokensMetadata, isLoading } = useMultipleMetadata(
-    tokens.map((t) => t.mint),
+    tokens.map((t) => t.mint)
   );
 
   if (isLoading) {
@@ -36,7 +36,7 @@ export function TokenList({ tokens }: TokenListProps) {
             <div className="flex items-center gap-2">
               {metadata.icon && (
                 <span className="text-xl">
-                  {metadata.icon.startsWith('http') ? (
+                  {metadata.icon.startsWith("http") ? (
                     <img
                       src={metadata.icon}
                       alt={metadata.symbol}
