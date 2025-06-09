@@ -5,11 +5,8 @@ import { PublicKey } from "@solana/web3.js";
 import escrowIdl from "./escrow.json";
 import { Escrow } from "./idlType";
 import { config } from "./config";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { randomBytes } from "crypto";
-import {
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 
 export class EscrowProgram {
   protected program: Program<Escrow>;
@@ -43,7 +40,12 @@ export class EscrowProgram {
     tokenAmountB: number
   ) {
     try {
-      console.log(tokenMintA, tokenMintB, tokenAmountA, tokenAmountB);
+      const accountInfoA = await this.connection.getAccountInfo(tokenMintA);
+      const accountInfoB = await this.connection.getAccountInfo(tokenMintB);
+      const tokenProgram = accountInfoA!.owner;
+      if (tokenProgram.toBase58() != accountInfoB!.owner.toBase58()) {
+        throw new Error("Token program must be same for both tokens");
+      }
       const offerId = new BN(randomBytes(8));
       const offerAddress = this.createOfferId(offerId);
 
@@ -51,19 +53,19 @@ export class EscrowProgram {
         tokenMintA,
         offerAddress,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
       const makerTokenAccountA = getAssociatedTokenAddressSync(
         tokenMintA,
         this.wallet.publicKey,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
       const makerTokenAccountB = getAssociatedTokenAddressSync(
         tokenMintB,
         this.wallet.publicKey,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
       const accounts = {
         maker: this.wallet.publicKey,
@@ -77,7 +79,7 @@ export class EscrowProgram {
 
       const txInstruction = await this.program.methods
         .makeOffer(offerId, new BN(tokenAmountA), new BN(tokenAmountB))
-        .accounts({ ...accounts, tokenProgram: TOKEN_PROGRAM_ID })
+        .accounts({ ...accounts, tokenProgram: tokenProgram })
         .instruction();
 
       const messageV0 = new web3.TransactionMessage({
@@ -109,31 +111,36 @@ export class EscrowProgram {
     tokenMintB: PublicKey
   ) {
     try {
-      console.log(maker, offer, tokenMintA, tokenMintB);
+      const accountInfoA = await this.connection.getAccountInfo(tokenMintA);
+      const accountInfoB = await this.connection.getAccountInfo(tokenMintB);
+      const tokenProgram = accountInfoA!.owner;
+      if (tokenProgram.toBase58() != accountInfoB!.owner.toBase58()) {
+        throw new Error("Token program must be same for both tokens");
+      }
       const takerTokenAccountA = getAssociatedTokenAddressSync(
         tokenMintA,
         this.wallet.publicKey,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
       const takerTokenAccountB = getAssociatedTokenAddressSync(
         tokenMintB,
         this.wallet.publicKey,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
       const makerTokenAccountB = getAssociatedTokenAddressSync(
         tokenMintB,
         maker,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
 
       const vault = getAssociatedTokenAddressSync(
         tokenMintA,
         offer,
         true,
-        TOKEN_PROGRAM_ID
+        tokenProgram
       );
       const accounts = {
         maker,
@@ -142,7 +149,7 @@ export class EscrowProgram {
         takerTokenAccountA,
         takerTokenAccountB,
         vault,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: tokenProgram,
         makerTokenAccountB,
       };
 
